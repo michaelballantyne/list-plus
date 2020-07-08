@@ -39,18 +39,14 @@
        #:literals (begin define-syntaxes define-values)
        [(begin body ...) (append-map do-expand (attribute body))]
        [(define-values (x ...) e)
-        #:with (x* ...) (map syntax-local-identifier-as-binding
-                             (attribute x))
-        (syntax-local-bind-syntaxes (attribute x) #f ctx)
+        #:with (x* ...) (syntax-local-bind-syntaxes (attribute x) #f ctx)
         (list (datum->syntax this-syntax
                              (list #'define-values #'(x* ...) #'e)
                              this-syntax
                              this-syntax))]
        [(define-syntaxes (x ...) e)
-        #:with (x* ...) (map syntax-local-identifier-as-binding
-                             (attribute x))
         #:with rhs (local-transformer-expand #'e 'expression '())
-        (syntax-local-bind-syntaxes (attribute x) #'rhs ctx)
+        #:with (x* ...) (syntax-local-bind-syntaxes (attribute x) #'rhs ctx)
         (list (datum->syntax this-syntax
                              (list #'define-syntaxes #'(x* ...) #'rhs)
                              this-syntax
@@ -63,7 +59,7 @@
      (partition (syntax-parser
                   [({~literal define-values} . _) #t]
                   [_ #f])
-                (append-map do-expand (attribute body))))
+                (append-map do-expand (map (lambda (s) (internal-definition-context-add-scopes ctx s)) (attribute body)))))
 
    (add-decl-props
     ctx
